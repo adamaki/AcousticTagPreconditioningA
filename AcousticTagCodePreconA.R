@@ -13,11 +13,12 @@ library(XLConnect)
 library(openxlsx)
 library(dplyr)
 library(tidyr)
-
+library(tidyverse)
+library(data.table)
 
 #ENTER YOUR VARIABLES HERE
-workingdir = "H:/Data processing/2016 Conditioning study A/5. Day CSV" # change to location of data
-dayfile = "run_3LLF16S100221_day.csv" # change to file to be analysed
+workingdir = "H:/Acoustic tag - Preconditioning A/Data processing/Filtered Data/Recoded Day CSV" # change to location of data
+dayfileloc = "run_3LLF16S100168_day_coded.csv" # change to file to be analysed
 masterfileloc = "H:/Data processing/AcousticTagFile_2016.xlsx" # change to location of AcousticTagFile.xlsx
 day = '221' # day of the year
 bottom.threshold = 15 # threshold for fish at bottom of cage coding (depth in metres)
@@ -547,6 +548,55 @@ system.time({
     
     dayfile <- dayfile[,c(seq(1, 12), 64, seq(13, 63))]
     
+  
+})
+
+
+
+
+# Retrospectively add new column of water temperature at the fish's depth
+
+fdtemp <- function(x, t1, t2, t4, t12){ 
+  
+  if(is.na(t1) == T){
+    
+    tatd <- NA
+    
+  } else {
+  
+  tprofile <- data.frame(depth = seq(0, 35, 0.01)) %>%
+    left_join(data.frame(depth = c(0, 1, 2, 4, 12, 35), temp = c(t1, t1, t2, t4, t12, t12)), by = 'depth') %>%
+    mutate(temp = approx(depth, temp, depth)$y)
+  
+  rownames(tprofile) <- tprofile$depth
+  #tprofile$depth <- NULL
+  
+  tatd <- as.numeric(tprofile[as.character(x),2])
+  
+  }
+  
+  return(tatd)
+}
+
+
+files <- list.files(path = workingdir, pattern = '*.csv', all.files = FALSE, recursive = FALSE)
+
+system.time({
+  
+  for(i in 1:length(files)){
+    
+    #day <- substr(files[[i]], 15, 17)
+    #dayfile <- read.csv(files[[i]], header = TRUE, sep = ",", colClasses = dayfile.classes)  
+    
+    dayfile <- fread(files[[i]], drop = c(1))
+    dayfile$EchoTime <- as.POSIXct(dayfile$EchoTime)
+    
+    dayfile$FISHTEMP <- round(mapply(fdtemp, x = dayfile$PosZ, t1 = dayfile$T1, t2 = dayfile$T2, t4 = dayfile$T4, t12 = dayfile$T12, SIMPLIFY = T), 2)
+    
+    write.csv(dayfile, files[[i]]) #write output to file
+    
+  }
+  
   
 })
 
