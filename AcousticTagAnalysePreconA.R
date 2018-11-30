@@ -92,7 +92,8 @@ library(adehabitatHR)
 
 
 #ENTER YOUR VARIABLES HERE
-workingdir = "H:/Acoustic tag - Preconditioning A/Data processing/Filtered Data/Recoded Day CSV" # change to location of data
+workingdir <- ifelse(Sys.info()['user'] == 'Laptop', "H:/Acoustic tag - Preconditioning A/Data processing/Filtered Data/Recoded Day CSV", '/Volumes/My Book/Acoustic datasets/Precon A') # change to location of data
+#workingdir = "H:/Acoustic tag - Preconditioning A/Data processing/Filtered Data/Recoded Day CSV" # change to location of data
 dayfile.loc = "run_3LLF16S100183_day_coded.csv" # change to file to be analysed
 masterfileloc = "H:/Data processing/AcousticTagFile_2016.xlsx" # change to location of AcousticTagFile.xlsx
 
